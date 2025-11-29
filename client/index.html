@@ -1,0 +1,25 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>World of Immanence - Prototype</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <style>
+    html,body { margin:0; padding:0; height:100%; background:#121212; color:#eee; font-family:system-ui,Arial; }
+    #game { display:block; margin:0 auto; background:#0b3a3a; touch-action: none; }
+    #hud { position:fixed; right:10px; top:10px; color:#fff; font-size:14px; }
+    button { font-size:14px; padding:8px; margin:4px; }
+  </style>
+</head>
+<body>
+  <canvas id="game" width="900" height="600"></canvas>
+  <div id="hud">
+    <div id="status">Connecting...</div>
+    <button id="btnFreeze">Admin: Freeze</button>
+    <button id="btnSafe">Admin: Safe Mode</button>
+    <button id="btnResume">Admin: Resume</button>
+  </div>
+  <script src="./network.js"></script>
+  <script src="./main.js"></script>
+</body>
+</html>
