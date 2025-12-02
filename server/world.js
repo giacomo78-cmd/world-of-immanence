@@ -4,6 +4,17 @@
 const { createEntity } = require('./entities');
 const cfg = require('./config');
 
+function distance(a, b) {
+  const dx = a.x - b.x;
+  const dy = a.y - b.y;
+  return Math.sqrt(dx * dx + dy * dy);
+}
+
+function normalize(dx, dy) {
+  const len = Math.sqrt(dx * dx + dy * dy) || 1;
+  return { x: dx / len, y: dy / len };
+}
+
 function initWorld(room) {
   room.tick = 0;
   room.safeMode = false;
@@ -28,16 +39,35 @@ function updateWorld(room) {
     e.y = Math.max(0, Math.min(2000, e.y));
   });
 
-  // simple monster wander (disabled in safeMode)
-  Object.values(room.entities).forEach(e => {
-    if (e.type === 'monster' && !room.safeMode) {
-      if (Math.random() < 0.02) {
-        e.vx = (Math.random() - 0.5) * 2;
-        e.vy = (Math.random() - 0.5) * 2;
-      }
+  // monster AI: chase hero if close, otherwise wander
+const hero = Object.values(room.entities).find(e => e.type === 'hero');
+
+Object.values(room.entities).forEach(e => {
+  if (e.type !== 'monster' || room.safeMode || !hero) return;
+
+  const d = distance(e, hero);
+
+  if (d < 250) {
+    // CHASE HERO
+    const dir = normalize(hero.x - e.x, hero.y - e.y);
+    e.vx = dir.x * 1.5;
+    e.vy = dir.y * 1.5;
+    e.state = 'chasing';
+    e.aiTimer = null; // override wandering timer
+  } else {
+    // WANDER (your original logic)
+    if (!e.aiTimer || Date.now() > e.aiTimer) {
+      const angle = Math.random() * Math.PI * 2;
+      const speed = 0.5;
+
+      e.vx = Math.cos(angle) * speed;
+      e.vy = Math.sin(angle) * speed;
+
+      e.aiTimer = Date.now() + 1000 + Math.random() * 2000;
+      e.state = 'wandering';
     }
-  });
-}
+  }
+});
 
 function immanencePulse(room) {
   // Demo stub: minor HP variation for monsters
