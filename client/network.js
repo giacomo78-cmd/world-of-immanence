@@ -3,7 +3,7 @@
 
 const WS_HOST = (location.hostname === 'localhost' || location.hostname === '127.0.0.1')
   ? 'ws://localhost:3001'
-  : `ws://${location.hostname}:3001`;
+  : `wss://${location.hostname}:3001`;
 
 class Net {
   constructor() {
