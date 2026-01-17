@@ -12,87 +12,56 @@ let myPlayerId = null;
 let myHeroId = null;
 
 function draw() {
-  ctx.clearRect(0,0,width,height);
+  ctx.clearRect(0, 0, width, height);
 
+  // background
   ctx.fillStyle = '#072b2b';
-  ctx.fillRect(0,0,width,height);
+  ctx.fillRect(0, 0, width, height);
 
   Object.values(localEntities).forEach(e => {
+    const sx = e.x / 2;
+    const sy = e.y / 2;
+
     if (e.type === 'hero') {
-      ctx.fillStyle = '#ffd166';
+      // --- HERO COLOR BASED ON HP ---
+      const maxHp = e.maxHp || 900;
+      const hpRatio = e.hp / maxHp;
+
+      if (hpRatio < 0.3) ctx.fillStyle = '#ef476f';      // low HP → red
+      else if (hpRatio < 0.6) ctx.fillStyle = '#ffd166'; // medium → orange/yellow
+      else ctx.fillStyle = '#06d6a0';                     // healthy → greenish
+
+      // hero body
       ctx.beginPath();
-      ctx.arc(e.x/2, e.y/2, 12, 0, Math.PI*2);
+      ctx.arc(sx, sy, 12, 0, Math.PI * 2);
       ctx.fill();
 
+      // --- HP BAR ---
+      const barWidth = 24;
+      const barHeight = 4;
+      ctx.fillStyle = '#222';
+      ctx.fillRect(sx - barWidth / 2, sy - 22, barWidth, barHeight);
+
+      ctx.fillStyle = '#ef476f';
+      ctx.fillRect(
+        sx - barWidth / 2,
+        sy - 22,
+        barWidth * Math.max(0, hpRatio),
+        barHeight
+      );
+
+      // id label
       ctx.fillStyle = '#000';
-      ctx.fillText(e.id, e.x/2 - 10, e.y/2 - 18);
+      ctx.fillText(e.id, sx - 10, sy - 28);
 
     } else if (e.type === 'monster') {
-      ctx.fillStyle = '#ef476f';
+      // monster body
+      ctx.fillStyle = e.state === 'chasing' ? '#ff0054' : '#ef476f';
       ctx.beginPath();
-      ctx.arc(e.x/2, e.y/2, 10, 0, Math.PI*2);
+      ctx.arc(sx, sy, 10, 0, Math.PI * 2);
       ctx.fill();
 
     } else {
       ctx.fillStyle = '#6be3c9';
       ctx.beginPath();
-      ctx.arc(e.x/2, e.y/2, 6, 0, Math.PI*2);
-      ctx.fill();
-    }
-  });
-
-  requestAnimationFrame(draw);
-}
-
-net.onWelcome = (m) => {
-  myPlayerId = m.playerId;
-  document.getElementById('status').textContent = `Player: ${myPlayerId} | tick:${m.tick}`;
-};
-
-net.onSnapshot = (snap) => {
-  localEntities = snap.entities || {};
-
-  if (!myHeroId) {
-    for (const id in localEntities) {
-      const e = localEntities[id];
-      if (e.owner === myPlayerId && e.type === 'hero') {
-        myHeroId = e.id;
-        break;
-      }
-    }
-  }
-
-  document.getElementById('status').textContent =
-    `Player: ${myPlayerId} | tick:${snap.tick} | ents:${Object.keys(localEntities).length}`;
-};
-
-canvas.addEventListener('click', (ev) => {
-  const rect = canvas.getBoundingClientRect();
-  const cx = ev.clientX - rect.left;
-  const cy = ev.clientY - rect.top;
-
-  const tx = cx * 2;
-  const ty = cy * 2;
-
-  if (!myHeroId) return;
-
-  net.send({
-    t: 'input',
-    playerId: myPlayerId,
-    seq: Date.now(),
-    tick: 0,
-    actions: [{ type: 'move', entityId: myHeroId, x: tx, y: ty, speed: 4 }]
-  });
-});
-
-document.getElementById('btnFreeze').onclick = () =>
-  fetch('/admin/freeze', { method: 'POST' });
-
-document.getElementById('btnSafe').onclick = () =>
-  fetch('/admin/safe', { method: 'POST' });
-
-document.getElementById('btnResume').onclick = () =>
-  fetch('/admin/resume', { method: 'POST' });
-
-net.connect('player1');
-draw();
+      ctx.arc(sx, sy, 6, 0, Math.PI * 2);*
